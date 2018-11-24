@@ -138,6 +138,7 @@ tsdb_SRC := \
 	src/tools/TextImporter.java	\
 	src/tools/TreeSync.java	\
 	src/tools/UidManager.java	\
+	src/tools/UnicodeUtil.java	\
 	src/tree/Branch.java	\
 	src/tree/Leaf.java	\
 	src/tree/Tree.java	\
@@ -358,7 +359,7 @@ test_SRC := \
 	test/utils/TestJSON.java \
 	test/utils/TestPair.java \
 	test/utils/TestPluginLoader.java
-	
+
 test_plugin_SRC := \
   test/plugin/DummyPluginA.java \
   test/plugin/DummyPluginB.java \
@@ -378,7 +379,7 @@ test_plugin_SVCS := \
   META-INF/services/net.opentsdb.tsd.RpcPlugin \
   META-INF/services/net.opentsdb.tsd.RTPublisher \
   META-INF/services/net.opentsdb.tsd.StorageExceptionHandler
-  
+
 test_plugin_MF := \
   test/META-INF/MANIFEST.MF
 
@@ -606,7 +607,7 @@ install-data-tools: $(tsdb_DEPS) $(jar)
 	$(INSTALL_SCRIPT) $$tools "$$destdatatoolsdir" || exit 1; \
 	tools="-r $(top_srcdir)/tools/*" ; \
 	echo " cp" $$tools "$$destdatatoolsdir" ; \
-	cp $$tools "$$destdatatoolsdir" || exit 1; 
+	cp $$tools "$$destdatatoolsdir" || exit 1;
 
 uninstall-data-tools:
 	@$(NORMAL_UNINSTALL)
@@ -670,7 +671,7 @@ uninstall-hook:
 get_runtime_dep_classpath = `for jar in $(test_DEPS); do $(find_jar); done | tr '\n' ':'`
 $(test_SRC): $(test_DEPS)
 	@$(refresh_src)
-	
+
 $(test_plugin_SRC): $(test_DEPS)
 	@$(refresh_src)
 

@@ -15,10 +15,9 @@ package net.opentsdb.tsd;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-
+import net.opentsdb.tools.UnicodeUtil;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-
 import net.opentsdb.core.TSDB;
 import net.opentsdb.utils.JSON;
 
@@ -31,22 +30,22 @@ final class SuggestRpc implements HttpRpc {
 
   /**
    * Handles an HTTP based suggest query
-   * <b>Note:</b> This method must remain backwards compatible with the 1.x 
+   * <b>Note:</b> This method must remain backwards compatible with the 1.x
    * API call
-   * @throws IOException if there is an error parsing the query or formatting 
+   * @throws IOException if there is an error parsing the query or formatting
    * the output
    * @throws BadRequestException if the user supplied bad data
    */
-  public void execute(final TSDB tsdb, final HttpQuery query) 
-    throws IOException {
-    
+  public void execute(final TSDB tsdb, final HttpQuery query)
+          throws IOException {
+
     // only accept GET/POST
     if (query.method() != HttpMethod.GET && query.method() != HttpMethod.POST) {
-      throw new BadRequestException(HttpResponseStatus.METHOD_NOT_ALLOWED, 
-          "Method not allowed", "The HTTP method [" + query.method().getName() +
-          "] is not permitted for this endpoint");
+      throw new BadRequestException(HttpResponseStatus.METHOD_NOT_ALLOWED,
+              "Method not allowed", "The HTTP method [" + query.method().getName() +
+              "] is not permitted for this endpoint");
     }
-    
+
     final String type;
     final String q;
     final String max;
@@ -58,12 +57,12 @@ final class SuggestRpc implements HttpRpc {
       }
       q = map.get("q") == null ? "" : map.get("q");
       max = map.get("max");
-    } else { 
+    } else {
       type = query.getRequiredQueryStringParam("type");
       q = query.hasQueryStringParam("q") ? query.getQueryStringParam("q") : "";
       max = query.getQueryStringParam("max");
     }
-    
+
     final int max_results;
     if (max != null && !max.isEmpty()) {
       try {
@@ -74,25 +73,26 @@ final class SuggestRpc implements HttpRpc {
     } else {
       max_results = 0;
     }
-    
+
     List<String> suggestions;
     if ("metrics".equals(type)) {
       suggestions = max_results > 0 ? tsdb.suggestMetrics(q, max_results) :
-         tsdb.suggestMetrics(q);
+              tsdb.suggestMetrics(q);
     } else if ("tagk".equals(type)) {
       suggestions = max_results > 0 ? tsdb.suggestTagNames(q, max_results) :
-         tsdb.suggestTagNames(q);
+              tsdb.suggestTagNames(q);
     } else if ("tagv".equals(type)) {
       suggestions = max_results > 0 ? tsdb.suggestTagValues(q, max_results) :
-        tsdb.suggestTagValues(q);
+              tsdb.suggestTagValues(q);
+      suggestions = UnicodeUtil.decodeList(suggestions);  //进行中文转码
     } else {
       throw new BadRequestException("Invalid 'type' parameter:" + type);
     }
-    
+
     if (query.apiVersion() > 0) {
       query.sendReply(query.serializer().formatSuggestV1(suggestions));
     } else { // deprecated API
       query.sendReply(JSON.serializeToBytes(suggestions));
     }
-  }  
+  }
 }
